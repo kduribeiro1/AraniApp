@@ -2,53 +2,49 @@
     position: relative;
     display: flex;
     flex-direction: column;
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    gap: 0;
 }
 
 main {
-    flex: 1;
+    flex: 1 1 auto;
+    width: 100%;
+    min-height: calc(100vh - var(--top-row-height));
 }
 
+/* Sidebar: usa gradiente igual ao header; é full height em telas grandes */
 .sidebar {
-    background-image: linear-gradient(180deg, rgb(5, 39, 103) 0%, #3a0647 70%);
+    background: linear-gradient(130deg, #2b5876 0%, #4e4376 50%, #2b5876 100%);
+    color: #ffffff;
+    padding: 0; /* padding do nav ficará no NavMenu.razor.css */
 }
 
+/* Top row (header) transparente para deixar o gradiente aparecer nas bordas */
 .top-row {
-    background-color: #f7f7f7;
-    border-bottom: 1px solid #d6d5d5;
-    justify-content: flex-end;
-    height: 3.5rem;
+    height: var(--top-row-height);
+    background: transparent;
     display: flex;
     align-items: center;
+    padding-left: var(--gutter-horizontal);
+    padding-right: var(--gutter-horizontal);
 }
 
-    .top-row ::deep a, .top-row ::deep .btn-link {
-        white-space: nowrap;
-        margin-left: 1.5rem;
-        text-decoration: none;
-    }
-
-    .top-row ::deep a:hover, .top-row ::deep .btn-link:hover {
-        text-decoration: underline;
-    }
-
-    .top-row ::deep a:first-child {
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-@media (max-width: 640.98px) {
-    .top-row {
-        justify-content: space-between;
-    }
-
-    .top-row ::deep a, .top-row ::deep .btn-link {
-        margin-left: 0;
-    }
+/* conteúdo principal: remove margens laterais e usa padding fluido */
+article.content {
+    padding: clamp(0.75rem, 2vw, 1.25rem);
+    margin: 0;
+    width: 100%;
+    box-sizing: border-box;
+    background: transparent; /* se quiser cartão, ajuste aqui */
 }
 
+/* Em telas amplas: sidebar fixa à esquerda e conteúdo ao lado */
 @media (min-width: 641px) {
     .page {
         flex-direction: row;
+        align-items: flex-start;
     }
 
     .sidebar {
@@ -58,39 +54,32 @@ main {
         top: 0;
     }
 
-    .top-row {
-        position: sticky;
-        top: 0;
-        z-index: 1;
+    main {
+        min-height: 100vh;
     }
 
-    .top-row.auth ::deep a:first-child {
-        flex: 1;
-        text-align: right;
-        width: 0;
-    }
-
-    .top-row, article {
-        padding-left: 2rem !important;
-        padding-right: 1.5rem !important;
+    /* garantir que o article ocupe o resto da largura sem margens extras */
+    article.content {
+        border-radius: 10px;
+        margin-left: 0;
+        margin-right: 0;
+        max-width: calc(100% - 250px);
     }
 }
 
-#blazor-error-ui {
-    background: lightyellow;
-    bottom: 0;
-    box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
-    display: none;
-    left: 0;
-    padding: 0.6rem 1.25rem 0.7rem 1.25rem;
-    position: fixed;
-    width: 100%;
-    z-index: 1000;
-}
-
-    #blazor-error-ui .dismiss {
-        cursor: pointer;
-        position: absolute;
-        right: 0.75rem;
-        top: 0.5rem;
+/* Em telas pequenas: sidebar vira drawer (NavMenu já trata do toggle) */
+@media (max-width: 640.98px) {
+    .page {
+        flex-direction: column;
     }
+
+    .sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+    }
+
+    article.content {
+        border-radius: 0.5rem;
+    }
+}

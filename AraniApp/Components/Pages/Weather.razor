@@ -1,35 +1,102 @@
 ﻿@page "/weather"
 @attribute [StreamRendering]
 
-<PageTitle>Weather</PageTitle>
+<PageTitle>Clima - Período</PageTitle>
 
-<h1>Weather</h1>
+<h1>Clima por período</h1>
 
-<p>This component demonstrates showing data.</p>
+<div class="mb-3">
+    <p>Escolha um período para visualizar as previsões diárias. Os dados abaixo são gerados localmente (simulação); substitua a lógica de geração por chamada a API se desejar dados reais.</p>
+</div>
 
-@if (forecasts == null)
+<div class="d-flex gap-2 align-items-end mb-3">
+    <div>
+        <label class="form-label">Data inicial</label>
+        <InputDate class="form-control" @bind-Value="startDate" />
+    </div>
+
+    <div>
+        <label class="form-label">Data final</label>
+        <InputDate class="form-control" @bind-Value="endDate" />
+    </div>
+
+    <div>
+        <label class="form-label">Local (opcional)</label>
+        <InputText class="form-control" @bind-Value="location" placeholder="Ex: São Paulo" />
+    </div>
+
+    <div>
+        <button class="btn btn-primary" @onclick="OnSearch">Buscar</button>
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(warning))
 {
-    <p><em>Loading...</em></p>
+    <div class="alert alert-warning">@warning</div>
+}
+
+@if (isLoading)
+{
+    <p><em>Carregando...</em></p>
+}
+else if (forecasts == null || forecasts.Count == 0)
+{
+    <p>Nenhuma previsão disponível para o período selecionado.</p>
 }
 else
 {
-    <table class="table">
+    <div class="mb-3">
+        <div class="row">
+            <div class="col-sm-4">
+                <div class="card p-2">
+                    <div class="fw-bold">Período</div>
+                    <div>@startDate.ToString("yyyy-MM-dd") — @endDate.ToString("yyyy-MM-dd")</div>
+                </div>
+            </div>
+            <div class="col-sm-2">
+                <div class="card p-2">
+                    <div class="fw-bold">Dias</div>
+                    <div>@forecasts.Count</div>
+                </div>
+            </div>
+            <div class="col-sm-2">
+                <div class="card p-2">
+                    <div class="fw-bold">Média (°C)</div>
+                    <div>@AverageC.ToString("F1")</div>
+                </div>
+            </div>
+            <div class="col-sm-2">
+                <div class="card p-2">
+                    <div class="fw-bold">Mín (°C)</div>
+                    <div>@MinC</div>
+                </div>
+            </div>
+            <div class="col-sm-2">
+                <div class="card p-2">
+                    <div class="fw-bold">Máx (°C)</div>
+                    <div>@MaxC</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <table class="table table-striped">
         <thead>
             <tr>
-                <th>Date</th>
-                <th>Temp. (C)</th>
-                <th>Temp. (F)</th>
-                <th>Summary</th>
+                <th>Data</th>
+                <th>Temp. (°C)</th>
+                <th>Temp. (°F)</th>
+                <th>Resumo</th>
             </tr>
         </thead>
         <tbody>
-            @foreach (var forecast in forecasts)
+            @foreach (var f in forecasts)
             {
                 <tr>
-                    <td>@forecast.Date.ToShortDateString()</td>
-                    <td>@forecast.TemperatureC</td>
-                    <td>@forecast.TemperatureF</td>
-                    <td>@forecast.Summary</td>
+                    <td>@f.Date.ToString("yyyy-MM-dd")</td>
+                    <td>@f.TemperatureC</td>
+                    <td>@f.TemperatureF</td>
+                    <td>@f.Summary</td>
                 </tr>
             }
         </tbody>
@@ -37,26 +104,73 @@ else
 }
 
 @code {
-    private WeatherForecast[]? forecasts;
+    private DateTime startDate = DateTime.Today.AddDays(-7);
+    private DateTime endDate = DateTime.Today;
+    private string? location;
+    private List<WeatherForecast>? forecasts;
+    private bool isLoading;
+    private string? warning;
 
-    protected override async Task OnInitializedAsync()
+    private static readonly string[] Summaries = new[]
     {
-        // Simulate asynchronous loading to demonstrate streaming rendering
-        await Task.Delay(500);
+        "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
+    };
 
-        var startDate = DateOnly.FromDateTime(DateTime.Now);
-        var summaries = new[] { "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching" };
-        forecasts = Enumerable.Range(1, 5).Select(index => new WeatherForecast
+    private double AverageC => forecasts?.Any() == true ? forecasts.Average(f => f.TemperatureC) : 0;
+    private int MinC => forecasts?.Any() == true ? forecasts.Min(f => f.TemperatureC) : 0;
+    private int MaxC => forecasts?.Any() == true ? forecasts.Max(f => f.TemperatureC) : 0;
+
+    private async Task OnSearch()
+    {
+        warning = null;
+
+        if (endDate < startDate)
         {
-            Date = startDate.AddDays(index),
-            TemperatureC = Random.Shared.Next(-20, 55),
-            Summary = summaries[Random.Shared.Next(summaries.Length)]
-        }).ToArray();
+            // troque datas se necessário
+            var tmp = startDate;
+            startDate = endDate;
+            endDate = tmp;
+        }
+
+        var days = (endDate.Date - startDate.Date).Days + 1;
+        if (days <= 0)
+        {
+            forecasts = new List<WeatherForecast>();
+            return;
+        }
+
+        if (days > 90)
+        {
+            // limita para evitar gerar muitos dias
+            warning = "Período muito longo. Limitando a 90 dias (uso simulado).";
+            endDate = startDate.AddDays(89);
+            days = 90;
+        }
+
+        isLoading = true;
+        forecasts = new List<WeatherForecast>();
+
+        // Simulação: crie dados locais. Para dados reais, substitua esta parte por chamada a uma API (ex: Open-Meteo, Meteostat, etc.)
+        await Task.Delay(250); // simula latência visual
+        var rng = Random.Shared;
+        for (int i = 0; i < days; i++)
+        {
+            var date = startDate.AddDays(i);
+            var tempC = rng.Next(-10, 36);
+            forecasts.Add(new WeatherForecast
+            {
+                Date = date,
+                TemperatureC = tempC,
+                Summary = Summaries[rng.Next(Summaries.Length)]
+            });
+        }
+
+        isLoading = false;
     }
 
     private class WeatherForecast
     {
-        public DateOnly Date { get; set; }
+        public DateTime Date { get; set; }
         public int TemperatureC { get; set; }
         public string? Summary { get; set; }
         public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);

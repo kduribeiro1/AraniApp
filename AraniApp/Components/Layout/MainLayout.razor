@@ -1,19 +1,54 @@
 ﻿@inherits LayoutComponentBase
 
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
+<div class="weather-app">
+    <header class="weather-hero">
+        <div class="hero-inner container d-flex justify-content-between align-items-center">
+            <div class="brand">
+                <h1 class="brand-title">Arani Clima</h1>
+                <p class="brand-sub">Condições e histórico por período</p>
+            </div>
 
-    <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
+            <div class="hero-right d-flex align-items-center">
+                <div class="current-condition me-3">
+                    <!-- Ícone simples inline (pode trocar por SVG ou ícone de biblioteca) -->
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" class="weather-icon" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <circle cx="12" cy="12" r="5" fill="rgba(255,255,255,0.95)"/>
+                        <g stroke="rgba(255,255,255,0.9)" stroke-width="1.2" stroke-linecap="round">
+                            <path d="M12 1v2"/>
+                            <path d="M12 21v2"/>
+                            <path d="M4.22 4.22l1.42 1.42"/>
+                            <path d="M18.36 18.36l1.42 1.42"/>
+                            <path d="M1 12h2"/>
+                            <path d="M21 12h2"/>
+                            <path d="M4.22 19.78l1.42-1.42"/>
+                            <path d="M18.36 5.64l1.42-1.42"/>
+                        </g>
+                    </svg>
+                    <div class="condition-info">
+                        <div class="temp">--°C</div>
+                        <div class="summary">Carregando...</div>
+                    </div>
+                </div>
+
+                <div class="date-time text-end">
+                    <div class="d-block">@DateTime.Now.ToString("dddd, dd MMMM yyyy")</div>
+                    <small class="text-muted">@DateTime.Now.ToString("HH:mm")</small>
+                </div>
+            </div>
         </div>
+    </header>
 
-        <article class="content px-4">
-            @Body
-        </article>
-    </main>
+    <div class="page">
+        <aside class="sidebar">
+            <NavMenu />
+        </aside>
+
+        <main class="main-content">
+            <article class="content container py-4">
+                @Body
+            </article>
+        </main>
+    </div>
 </div>
 
 <div id="blazor-error-ui">
@@ -21,3 +56,6 @@
     <a href="" class="reload">Reload</a>
     <a class="dismiss">🗙</a>
 </div>
+
+<style>
+</style>
